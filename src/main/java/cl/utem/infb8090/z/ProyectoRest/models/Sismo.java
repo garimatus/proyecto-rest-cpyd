@@ -1,4 +1,4 @@
-package cl.utem.cpyd.z.ProyectoRest.models;
+package cl.utem.infb8090.z.ProyectoRest.models;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "sismo")
-public class sismo {
+@Table(name = "sismo_z")
+public class Sismo {
 
     @Id
-    @Column(name = "id_sismo", nullable = false)
+    @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_sismo = null;
+    private Long id = null;
 
     @Column(name = "fecha_local", nullable = false)
     private LocalDateTime fecha_local = null;
@@ -40,11 +40,11 @@ public class sismo {
     @Column(name = "ref_geografica", nullable = false)
     private String ref_geografica = null;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     
     public Long getId() {
-        return this.id_sismo;
+        return this.id;
     }
 
     public LocalDateTime getFechaLocal() {

@@ -1,4 +1,4 @@
-package cl.utem.cpyd.z.ProyectoRest;
+package cl.utem.infb8090.z.ProyectoRest;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
