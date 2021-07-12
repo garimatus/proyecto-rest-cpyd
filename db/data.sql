@@ -29,12 +29,12 @@ CREATE TABLE IF NOT EXISTS sismo_z (
     PRIMARY KEY(id)
 );
 
-CREATE UNIQUE INDEX ON usuario(UPPER(TRIM(both FROM app)));
+CREATE UNIQUE INDEX ON credencial_z(UPPER(TRIM(both FROM app)));
 
-CREATE INDEX ON sismo(created_at);
+CREATE INDEX ON sismo_z(created_at);
 
 COMMIT;
 
-INSERT INTO credencial_z(token, app, password, validacion) VALUES('token123', 'Reko', 'test123', 'false');
+INSERT INTO credencial_z(token, app, password, validacion) VALUES('token123', 'RekoBeta', 'test123', 'false');
 INSERT INTO credencial_z(token, app, password, validacion) VALUES('token420', 'ProyectoAppMobile', 'test123', 'true');
 INSERT INTO credencial_z(token, app, password, validacion) VALUES('token321', 'MiUtem', 'test123', 'false');
