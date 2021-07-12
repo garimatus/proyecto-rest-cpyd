@@ -20,6 +20,7 @@ import cl.utem.infb8090.z.ProyectoRest.models.Credencial;
 import cl.utem.infb8090.z.ProyectoRest.repository_manager.CredencialManager;
 import cl.utem.infb8090.z.ProyectoRest.value_objects.LoginVO;
 import cl.utem.infb8090.z.ProyectoRest.value_objects.AuthVO;
+import cl.utem.infb8090.z.ProyectoRest.value_objects.ExceptionVO;
 
 
 @RestController
@@ -37,9 +38,12 @@ public class AuthRest implements Serializable {
     @ApiOperation(value = "Solicitar un token JWT válido para consumir la operación del servicio rest")
     @PostMapping(value = {"/login"}, consumes = {"application/json;charset=utf-8"}, produces = {"application/json;charset=utf-8"})
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Error 400 : Petición inválida")
+        @ApiResponse(code = 200, message = "Respuesta exitosa", response = AuthVO.class, responseContainer = "List"),
+        @ApiResponse(code = 401, message = "Acceso denegado", response = ExceptionVO.class),
+        @ApiResponse(code = 403, message = "Sin permisos suficientes", response = ExceptionVO.class),
+        @ApiResponse(code = 404, message = "Recurso no encontrado", response = ExceptionVO.class),
+        @ApiResponse(code = 412, message = "Precondición fallida", response = ExceptionVO.class)
     })
-    
     public ResponseEntity<AuthVO> login(@RequestBody LoginVO request) {
         
         if (request == null) {
@@ -62,7 +66,7 @@ public class AuthRest implements Serializable {
             LOGGER.error(message);
             throw new ProyectoRestException(401, message);
         }
-        
+
         final String jwt = proyectoRestJwt.crearJwt("/v1/auth/login", credencial);
 
         if (StringUtils.isBlank(jwt)) {

@@ -51,12 +51,12 @@ public class ProyectoRestJwt implements Serializable {
         return jwt;
     }
 
-    public Boolean validarJwt(final String credencialID, final String jwt) {
+    public Boolean validarJwt(final Credencial credencial, final String jwt) {
         Boolean validacion = false;
 
         try {
             
-            if (StringUtils.isNotBlank(jwt)) {
+            if (StringUtils.isNotBlank(jwt) && credencial != null) {
                 
                 Algorithm algoritmo = Algorithm.HMAC256(secret);
                 Verification verificacion = JWT.require(algoritmo);
@@ -67,7 +67,7 @@ public class ProyectoRestJwt implements Serializable {
                     
                     final String jwtID = StringUtils.trimToEmpty(decodificacion.getClaim("id").asString());
 
-                    validacion = StringUtils.equals(credencialID, jwtID);
+                    validacion = StringUtils.equals(credencial.getApp(), jwtID);
 
                     if (!validacion) {
                         LOGGER.error("El token no corresponde al usuario");
@@ -77,8 +77,8 @@ public class ProyectoRestJwt implements Serializable {
 
         } catch (Exception e) {
             validacion = false;
-            LOGGER.error("Error al codificar token : {}", e.getMessage());
-            LOGGER.debug("Error al codificar token : {}", e.getMessage(), e);
+            LOGGER.error("Error al decodificar token : {}", e.getMessage());
+            LOGGER.debug("Error al decodificar token : {}", e.getMessage(), e);
         }
         
         return validacion;
