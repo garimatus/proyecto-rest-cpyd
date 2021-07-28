@@ -1,5 +1,6 @@
 package cl.utem.infb8090.z.ProyectoRest.rest_controllers.v1;
 
+
 import java.io.Serializable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 
 import cl.utem.infb8090.z.ProyectoRest.etc.ProyectoRestJwt;
 import cl.utem.infb8090.z.ProyectoRest.exceptions.ProyectoRestException;
@@ -35,7 +37,7 @@ public class AuthRest implements Serializable {
     @Autowired
     private transient ProyectoRestJwt proyectoRestJwt;
 
-    @ApiOperation(value = "Solicitar un token JWT válido para consumir la operación del servicio rest")
+    @ApiOperation(value = "Solicitar un token JWT válido para consumir la operación del servicio REST")
     @PostMapping(value = {"/login"}, consumes = {"application/json;charset=utf-8"}, produces = {"application/json;charset=utf-8"})
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Respuesta exitosa", response = AuthVO.class, responseContainer = "List"),
@@ -67,7 +69,7 @@ public class AuthRest implements Serializable {
             throw new ProyectoRestException(401, message);
         }
 
-        final String jwt = proyectoRestJwt.crearJwt("/v1/auth/login", credencial);
+        final String jwt = proyectoRestJwt.crearJwt("/v1/auth/login", credencial.getToken());
 
         if (StringUtils.isBlank(jwt)) {
             LOGGER.error("No se pudo generar el token solicitado");

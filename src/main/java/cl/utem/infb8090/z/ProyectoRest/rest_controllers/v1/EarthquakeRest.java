@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -20,16 +19,12 @@ import java.util.List;
 import java.util.ArrayList;
 
 import cl.utem.infb8090.z.ProyectoRest.repository_manager.EarthquakeManager;
-import cl.utem.infb8090.z.ProyectoRest.repository_manager.CredencialManager;
 import cl.utem.infb8090.z.ProyectoRest.etc.ProyectoRestJwt;
-import cl.utem.infb8090.z.ProyectoRest.etc.ProyectoRestScrapper;
+import cl.utem.infb8090.z.ProyectoRest.etc.ProyectoRestScraper;
 import cl.utem.infb8090.z.ProyectoRest.exceptions.ProyectoRestException;
 import cl.utem.infb8090.z.ProyectoRest.value_objects.EarthquakeVO;
-import cl.utem.infb8090.z.ProyectoRest.value_objects.LoginVO;
 import cl.utem.infb8090.z.ProyectoRest.value_objects.ExceptionVO;
-import cl.utem.infb8090.z.ProyectoRest.models.Credencial;
 import cl.utem.infb8090.z.ProyectoRest.models.Earthquake;
-
 
 
 @RestController
@@ -40,17 +35,14 @@ public class EarthquakeRest implements Serializable {
     private transient EarthquakeManager earthquakeManager;
 
     @Autowired
-    private transient ProyectoRestScrapper proyectoRestScrapper;
+    private transient ProyectoRestScraper proyectoRestScraper;
 
     @Autowired
     private transient ProyectoRestJwt proyectoRestJwt;
 
-    @Autowired
-    private transient CredencialManager credencialManager;
-
     private static Logger LOGGER = LoggerFactory.getLogger(EarthquakeRest.class);
 
-    @ApiOperation(value = "Obtener un arreglo de sismos como objetos json mediante una autenticación")
+    @ApiOperation(value = "Obtener un arreglo de sismos como un array de objetos JSON mediante una autenticación")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Respuesta exitosa", response = EarthquakeVO.class, responseContainer = "List"),
         @ApiResponse(code = 401, message = "Acceso denegado", response = ExceptionVO.class),
@@ -60,55 +52,41 @@ public class EarthquakeRest implements Serializable {
     })
     @GetMapping(value = {"/earthquakes"}, consumes = {"application/json;charset=utf-8"}, produces = {"application/json;charset=utf-8"})
     public ResponseEntity getAllEarthquakes(
-    @ApiParam(name = "auth", value = "Header de autenticación", required = true, example = "bearer: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIvdjEvYXV0aC9sb2dpbiIsImlkIjoiUHJveWVjdG9BcHBNb2JpbGUiLCJleHAiOjE2MjU5MzE0NTUsImlhdCI6MTYyNTkwNjI1NSwianRpIjoiYWJjMTIzIn0.qS4688Ae98Sr3m8p5C81ddtgNiW69fxpl-2u5YIVUbA") 
-    @RequestHeader(name = "auth", required = true) String bearer,
-    @RequestBody(required = true) LoginVO request) {
+    @ApiParam(name = "auth", value = "Bearer de autenticación de usuario", required = true, example = "bearer: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIvdjEvYXV0aC9sb2dpbiIsImlkIjoiUHJveWVjdG9BcHBNb2JpbGUiLCJleHAiOjE2MjU5MzE0NTUsImlhdCI6MTYyNTkwNjI1NSwianRpIjoiYWJjMTIzIn0.qS4688Ae98Sr3m8p5C81ddtgNiW69fxpl-2u5YIVUbA, AndAnotherOne")
+    @RequestHeader(name = "auth", required = true) String bearer) {
 
-        if (bearer == null || request == null) {
+        String[] auth = StringUtils.split(bearer, ",");
+
+        if (bearer == null || StringUtils.isBlank(bearer) || auth.length != 2) {
             throw new ProyectoRestException(400, "Petición inválida");
         }
-
-        final String app = StringUtils.trimToEmpty(request.getApp());
-        final String password = request.getPassword();
         
-        if (StringUtils.isBlank(app) || StringUtils.isBlank(password) || StringUtils.isBlank(bearer)) {
-            final String message = "Credenciales con datos insuficientes";
-            LOGGER.error(message);
-            throw new ProyectoRestException(message);
-        }
-        
-        final Credencial credencial = credencialManager.getCredencialByAppAndPassword(app, password);
+        final String jwt = StringUtils.trimToEmpty(StringUtils.removeStartIgnoreCase(auth[0], "bearer: "));
 
-        if (credencial == null || !credencial.getValidacion()) {
-            final String message = "El usuario no existe o no ha sido autorizado";
-            LOGGER.error(message);
-            throw new ProyectoRestException(401, message);
-        }
+        final String appToken = StringUtils.trimToEmpty(StringUtils.removeStartIgnoreCase(auth[1], " "));
 
-        final String jwt = StringUtils.trimToEmpty(StringUtils.removeStartIgnoreCase(bearer, "bearer: "));
-
-        if (!proyectoRestJwt.validarJwt(credencial, jwt)) {
-            final String message = "El token utilizado no es válido";
+        if (!proyectoRestJwt.validarJwt(jwt, appToken)) {
+            final String message = "El/los token(s) utilizado(s) no es/son válido(s)";
             LOGGER.error(message);
             throw new ProyectoRestException(401, message);
         }
         
-        final List<EarthquakeVO> scrappedEarthquakes = proyectoRestScrapper.getLastEarthquakes();
+        final List<EarthquakeVO> scrapedEarthquakes = proyectoRestScraper.getLastEarthquakes();
 
-        if (scrappedEarthquakes.isEmpty()) {
+        if (scrapedEarthquakes.isEmpty()) {
             final String message = "Ha ocurrido un problema conectándose con la página web http://www.sismologia.cl/links/lasts_sismos.html";
             LOGGER.error(message);
             throw new ProyectoRestException(401, message);
         }
 
-        final EarthquakeVO last = scrappedEarthquakes.get(0);
+        final EarthquakeVO lastScrapedEarthquake = scrapedEarthquakes.get(0);
         
-        final Earthquake lastEarthquake = earthquakeManager.findEarthquakeByDateAndPosition(last.getFechaLocal(), last.getLatitud(), last.getLongitud(), last.getProfundidad());
+        final Earthquake lastEarthquake = earthquakeManager.findEarthquakeByDateAndPosition(lastScrapedEarthquake.getFechaLocal(), lastScrapedEarthquake.getLatitud(), lastScrapedEarthquake.getLongitud(), lastScrapedEarthquake.getProfundidad());
 
         if (lastEarthquake == null) {
-            for (Integer i = 0; i < scrappedEarthquakes.size(); ++i) {
+            for (Integer i = 0; i < scrapedEarthquakes.size(); ++i) {
                 
-                EarthquakeVO temp = scrappedEarthquakes.get(i);
+                EarthquakeVO temp = scrapedEarthquakes.get(i);
                 Earthquake earthquakeQuery = earthquakeManager.findEarthquakeByDateAndPosition(temp.getFechaLocal(), temp.getLatitud(), temp.getLongitud(), temp.getProfundidad());
                 
                 if (earthquakeQuery == null) {

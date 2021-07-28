@@ -4,7 +4,6 @@ package cl.utem.infb8090.z.ProyectoRest.etc;
 import java.util.List;
 import java.util.ArrayList;
 import org.jsoup.Jsoup;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
@@ -19,7 +18,7 @@ import cl.utem.infb8090.z.ProyectoRest.value_objects.EarthquakeVO;
 
 
 @Service
-public class ProyectoRestScrapper implements Serializable {
+public class ProyectoRestScraper implements Serializable {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ProyectoRestJwt.class);
     
